@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -139,7 +138,7 @@ namespace TrussSolver
             if (EM == EditMode.GanJian)
             {
                 EndPoint = GetNearestValidPoint(e);
-                DrawAndAddBar(StartPoint, EndPoint);
+                DrawAndAddMember(StartPoint, EndPoint);
                 StartEdit = false;
             }
             else if (EM == EditMode.HeZai)
@@ -185,7 +184,7 @@ namespace TrussSolver
             for (int i = 0; i < TS.NCount; i++)//仅使用下三角
                 for (int j = 0; j < i; j++)
                     if (TS.NodesConnect[i][j] == 1)
-                        DrawBar(TS.Nodes[i], i + 1, TS.Nodes[j], j + 1, true);
+                        DrawMember(TS.Nodes[i], i + 1, TS.Nodes[j], j + 1, true);
 
             for (int i = 0; i < TS.FCount; i++)
                 DrawForce(TS.Nodes[TS.Loads[i].NodeIndex], Point.Empty, i + 1, TS.Loads[i].Size, true);
@@ -227,7 +226,7 @@ namespace TrussSolver
             return new PointF(ptf.X * 40f + 20f, 500f - ptf.Y * 40f);
         }
 
-        private void DrawAndAddBar(PointF spf, PointF epf, bool IsGridPointF = false)//绘制杆件，并添加至TS中
+        private void DrawAndAddMember(PointF spf, PointF epf, bool IsGridPointF = false)//绘制杆件，并添加至TS中
         {
             if (spf == epf)
                 return;
@@ -236,10 +235,10 @@ namespace TrussSolver
                 spf = ToGridPointF(spf);
                 epf = ToGridPointF(epf);
             }
-            if (TS.ContainsBar(TS.GetNodeIndex(spf), TS.GetNodeIndex(epf)))
+            if (TS.ContainsMember(TS.GetNodeIndex(spf), TS.GetNodeIndex(epf)))
                 return;
-            int[] Ind = TS.AddBar(spf, epf);
-            DrawBar(spf, Ind[0] + 1, epf, Ind[1] + 1, true);
+            int[] Ind = TS.AddMember(spf, epf);
+            DrawMember(spf, Ind[0] + 1, epf, Ind[1] + 1, true);
         }
         private void DrawAndAddForce(PointF spf, PointF epf, bool IsGridPointF = false)
         {
@@ -258,7 +257,7 @@ namespace TrussSolver
             int FI = TS.AddForce(nf);
             DrawForce(spf, epf, FI + 1, nf.Size, true);
         }
-        private void DrawBar(PointF spf, int spNum, PointF epf, int epNum, bool IsGridPointF = false)
+        private void DrawMember(PointF spf, int spNum, PointF epf, int epNum, bool IsGridPointF = false)
         {
             if (spf == epf)
                 return;
@@ -515,23 +514,23 @@ namespace TrussSolver
             if (spf == epf)
             { MessageBox.Show("终点与起点坐标不能相等！"); textBox2.Focus(); return; }
 
-            if (TS.ContainsBar(TS.GetNodeIndex(spf), TS.GetNodeIndex(epf)))
+            if (TS.ContainsMember(TS.GetNodeIndex(spf), TS.GetNodeIndex(epf)))
             { MessageBox.Show("该杆件已存在!"); textBox1.Focus(); return; }
 
-            DrawAndAddBar(spf, epf, true);
+            DrawAndAddMember(spf, epf, true);
             //textBox1.Clear(); textBox2.Clear();
             textBox1.Text = textBox2.Text; textBox2.Clear(); textBox2.Focus();
         }
         private void button2_Click(object sender, EventArgs e)//删除杆件
         {
-            string[] bar = textBox3.Text.Replace(" ", "").Split(new char[] { ',', '，' });
-            if (bar.Length != 2)
+            string[] member = textBox3.Text.Replace(" ", "").Split(new char[] { ',', '，' });
+            if (member.Length != 2)
             { MessageBox.Show("输入格式不正确！"); textBox3.Focus(); return; }
             int NInd1 = 0, NInd2 = 0;
             try
             {
-                NInd1 = int.Parse(bar[0]);
-                NInd2 = int.Parse(bar[1]);
+                NInd1 = int.Parse(member[0]);
+                NInd2 = int.Parse(member[1]);
             }
             catch (Exception ex)
             {
@@ -541,10 +540,10 @@ namespace TrussSolver
             NInd1--; NInd2--;//转为从零开始的索引
             if (NInd1 == NInd2)
             { MessageBox.Show("杆件两端结点须不同！"); textBox3.Focus(); return; }
-            if (!TS.ContainsBar(NInd1, NInd2))
+            if (!TS.ContainsMember(NInd1, NInd2))
             { MessageBox.Show("该杆件不存在！"); textBox3.Focus(); return; }
 
-            TS.DelBar(NInd1, NInd2);
+            TS.DelMember(NInd1, NInd2);
             RefreshByTs();
             textBox3.Clear();
         }

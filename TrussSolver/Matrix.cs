@@ -75,7 +75,6 @@ namespace TrussSolver
                 }
             }
         }
-
         public Matrix(double[,] m)
         {
             this.rows = m.GetLength(0);
@@ -90,7 +89,6 @@ namespace TrussSolver
                 }
             }
         }
-
         public Matrix(List<List<double>> m)
         {
             this.rows = m.Count;
@@ -104,7 +102,6 @@ namespace TrussSolver
                 }
             }
         }
-
         public Matrix(List<double[]> m)
         {
             this.rows = m.Count;
@@ -540,7 +537,7 @@ namespace TrussSolver
         /// <param name="m"></param>
         /// <param name="r"></param>
         /// <returns></returns>
-        public static Matrix GetMatrixRows(Matrix m, List<int> rs)
+        public Matrix GetRows(List<int> rs)
         {
             List<List<double>> mr = new List<List<double>>();
             try
@@ -548,9 +545,9 @@ namespace TrussSolver
                 foreach (int i in rs)
                 {
                     List<double> mr1 = new List<double>();
-                    for (int j = 0; j < m.cols; j++)
+                    for (int j = 0; j < Cols; j++)
                     {
-                        mr1.Add(m[i, j]);
+                        mr1.Add(this[i, j]);
                     }
                     mr.Add(mr1);
                 }
@@ -562,6 +559,19 @@ namespace TrussSolver
                 throw new Exception("");
             }
 
+        }
+
+        /// <summary>
+        /// 将矩阵中所有值保留到小数点后 decimals 位
+        /// </summary>
+        /// <param name="decimals"></param>
+        public void Round(int decimals)
+        {
+            int size = Rows * Cols;
+            for (int i = 0; i < size; i++)
+            {
+                element[i] = Math.Round(element[i], decimals);
+            }
         }
 
         /// <summary>

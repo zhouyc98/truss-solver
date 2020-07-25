@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.IO;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -34,7 +33,7 @@ namespace TrussSolver
             EA = 1;
         }
 
-        public int[] AddBar(PointF StartP, PointF EndP)//添加杆件，返回startP，endP从零开始的索引
+        public int[] AddMember(PointF StartP, PointF EndP)//添加杆件，返回startP，endP从零开始的索引
         {
             if (StartP == EndP)
                 return new int[] { -1, -1 };
@@ -85,9 +84,9 @@ namespace TrussSolver
                 return Ind;
             }
         }
-        public bool DelBar(int NInd1, int NInd2)//删除杆件，视情况删除结点
+        public bool DelMember(int NInd1, int NInd2)//删除杆件，视情况删除结点
         {
-            if (!ContainsBar(NInd1, NInd2))
+            if (!ContainsMember(NInd1, NInd2))
                 return false;
             int Imin = Math.Min(NInd1, NInd2), Imax = Math.Max(NInd1, NInd2);
 
@@ -197,7 +196,7 @@ namespace TrussSolver
             FN = null;
             RE = null;
         }
-        public bool ContainsBar(int NInd1, int NInd2)
+        public bool ContainsMember(int NInd1, int NInd2)
         {
             int Imin = Math.Min(NInd1, NInd2), Imax = Math.Max(NInd1, NInd2);
             if (NInd1 == NInd2 || Imin < 0 || Imax >= NCount)//索引相等或超出范围
@@ -264,6 +263,8 @@ namespace TrussSolver
         public bool OpenFile()
         {
             OpenFileDialog ofd = new OpenFileDialog();
+            //ofd.InitialDirectory = Application.StartupPath;//
+
             ofd.Multiselect = false;
             ofd.Title = "请选择文件";
             ofd.Filter = "Xml文件（*.xml）|*.xml";
@@ -319,6 +320,8 @@ namespace TrussSolver
         public bool SaveFile()
         {
             SaveFileDialog sfd = new SaveFileDialog();
+            //sfd.InitialDirectory = Application.StartupPath;//
+
             sfd.Filter = "Xml文件（*.xml）|*.xml";
             sfd.FilterIndex = 1;
             sfd.RestoreDirectory = true;
@@ -429,7 +432,7 @@ namespace TrussSolver
             var b2 = Bears.Select(b => (double)b.XY).ToArray(); _Bears.Add(b2);
 
             #region 写入信息到TS_Matrix.txt
-            /* 取消注释后，TrussSolver.exe文件同目录位置会产生TS_Matrix.txt
+            //* 取消注释后，TrussSolver.exe文件同目录位置会产生TS_Matrix.txt
             StreamWriter sw = new StreamWriter("TS_Matrix.txt");
             sw.WriteLine("NodesConnect=[");
             for (int i = 0; i < NCount; i++)
@@ -550,6 +553,7 @@ namespace TrussSolver
             }
 
             Matrix D = K.Inv() * F;
+            D.Round(6);//保留小数后6位
 
             FN = new double[NCount, NCount];
             RE = new double[2, BCount];
@@ -574,7 +578,7 @@ namespace TrussSolver
                         Matrix T = new Matrix(new double[4, 4] { { c, s, 0, 0 }, { -s, c, 0, 0 }, { 0, 0, c, s }, { 0, 0, -s, c } });
                         Matrix D4 = new Matrix(new double[4, 1] { { D[2 * i, 0] }, { D[2 * i + 1, 0] }, { D[2 * j, 0] }, { D[2 * j + 1, 0] } });
                         Matrix f = T * Ke * D4;
-                        FN[i, j] = -f[0, 0];
+                        FN[i, j] = Math.Round(f[0, 0], 6);//+-
                     }
                 }
             }
@@ -592,13 +596,12 @@ namespace TrussSolver
                     ind_a.Add(i);
             }
 
-            Matrix K_ba = Matrix.GetMatrixRows((Matrix.GetMatrixRows(K0, ind_b).Tran()), ind_a).Tran();
-            Matrix F_RE = K_ba * Matrix.GetMatrixRows(D, ind_a);
+            Matrix F_RE = K0.GetRows(ind_b) * D;
 
             for (int i = 0; i < BCount; i++)
             {
-                RE[0, i] = F_RE[2 * i, 0];
-                RE[1, i] = F_RE[2 * i + 1, 0];
+                RE[0, i] = Math.Round(F_RE[2 * i, 0], 6);
+                RE[1, i] = Math.Round(F_RE[2 * i + 1, 0], 6);
             }
 
             // FN & RE 求解完毕
